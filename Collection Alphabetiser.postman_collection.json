@@ -1,0 +1,214 @@
+{
+	"info": {
+		"_postman_id": "5d8fcf87-eaf6-4d2e-9058-9dd550e6cfe2",
+		"name": "Collection Alphabetiser",
+		"description": "# Sort your collection alphabetically.\n\n(Works with sub-folders)\n\nHow to use:\n\n\\* Fork the collection.  \n\\* Open the collection level variables.  \n\\* Enter your Postman API Key.  \n\\* Enter the 'Collection ID' for the collection you want to sort.  \n\\* Enter the 'Workspace ID' where the collection being sorted is stored.  \n\\* Leave the 'JSONBODY' variable blank, this will be automatically populated.  \n\\* Run the collection via the 'Collection Runner'.\n\n---\n\nThis collection utilises _**postman.setNextRequest(\"request_name\");**_\n\nThis means that we need to run the collection via the _'Collection Runner'_ option.\n\nIf the collection is not run in this way, the setNextRequest will not be triggered.\n\n---\n\nOnce the correct information has been entered and the collection runner triggered, the collection will pull in the JSON response from the 'GET' call and sort it using the JavaScript inside the 'Tests' tab.\n\nOnce sorted it will pass the output to the 'Create new alphabetised collection' POST request, where a new collection will be created from the sorted data.\n\nThen finally, the original collection will be deleted.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23596470"
+	},
+	"item": [
+		{
+			"name": "Get and alphabetise the collection",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json().collection;\r",
+							"let sortetObj;\r",
+							"\r",
+							"function sorter(response) {\r",
+							"\t//Get elements from each array\r",
+							"\tlet requests = [];\r",
+							"\tconst getRequestsFromJson = (obj) => {\r",
+							"\t\tif (obj?.item) {\r",
+							"\t\t\tobj.item.forEach((element) => {\r",
+							"\t\t\t\tif (element?.request) {\r",
+							"\t\t\t\t\trequests.push(element.request);\r",
+							"\t\t\t\t} else {\r",
+							"\t\t\t\t\tgetRequestsFromJson(element);\r",
+							"\t\t\t\t}\r",
+							"\t\t\t});\r",
+							"\t\t}\r",
+							"\t\t//Sort it\r",
+							"\t\tobj.item.sort((a, b) => {\r",
+							"\t\t\tlet fa = a.name.toLowerCase(),\r",
+							"\t\t\t\tfb = b.name.toLowerCase();\r",
+							"\t\t\tif (fa < fb) return -1;\r",
+							"\t\t\tif (fa > fb) return 1;\r",
+							"\t\t\treturn 0;\r",
+							"\t\t});\r",
+							"\t\tsortedObj = obj;\r",
+							"        pm.collectionVariables.set(\"JSONBODY\", '{\\\"collection\\\":' + JSON.stringify(sortedObj) + '}');\r",
+							"    };\r",
+							"\tgetRequestsFromJson(response);\r",
+							"}\r",
+							"\r",
+							"//Call sorter function\r",
+							"sorter(response);\r",
+							"\r",
+							"postman.setNextRequest(\"Create new alphabetised collection\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{postman-api-key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://api.getpostman.com/collections/{{collectionId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"getpostman",
+						"com"
+					],
+					"path": [
+						"collections",
+						"{{collectionId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create new alphabetised collection",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"postman.setNextRequest(\"Delete original collection\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{postman-api-key}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{JSONBODY}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.getpostman.com/collections?workspace={{workspaceId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"getpostman",
+						"com"
+					],
+					"path": [
+						"collections"
+					],
+					"query": [
+						{
+							"key": "workspace",
+							"value": "{{workspaceId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete original collection",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"postman.setNextRequest(null);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{postman-api-key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://api.getpostman.com/collections/{{collectionId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"getpostman",
+						"com"
+					],
+					"path": [
+						"collections",
+						"{{collectionId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "postman-api-key",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "collectionId",
+			"value": "22617629-cdac6c99-f51b-44fe-bfa0-7a1d49ada8de",
+			"type": "string"
+		},
+		{
+			"key": "workspaceId",
+			"value": "270a2625-0d80-4f00-901e-5d808a2dbbc1",
+			"type": "string"
+		},
+		{
+			"key": "JSONBODY",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
